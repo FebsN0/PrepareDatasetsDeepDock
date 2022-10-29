@@ -138,19 +138,16 @@ function postprocess (){
 	count=$(($count-1))
 }
 
-
 # name array
 # arrayBlocksReady2Docking
-
 function docking (){
 	cd dockG
 	case $cluster in
-        	1|2|4) sh run.sh -qsys slurm -qargs "--ntasks=10 --cpus-per-task=2 --mem=3G --nodes=1 --account=def-jtus --time=$timeDock --job-name=Docking" -submit;;
-                3) sh run.sh -qsys slurm -qargs "--ntasks=1 --cpus-per-task=10 --mem=3G --nodes=1 --account=def-jtus --time=$timeDock --job-name=Docking" -submit;;
+        	1|2|4) if [[ -d dockG/run.log]]; then rm dockG/run.log; fi; sh run.sh -qsys slurm -qargs "--ntasks=10 --cpus-per-task=2 --mem=3G --nodes=1 --account=def-jtus --time=$timeDock --job-name=Docking" -submit;;
+                3) if [[ -d dockG/run.log]]; then rm dockG/run.log; fi; sh run.sh -qsys slurm -qargs "--ntasks=1 --cpus-per-task=10 --mem=3G --nodes=1 --account=def-jtus --time=$timeDock --job-name=Docking" -submit;;
         esac
 	count=$(($count-1))
 }
-
 
 # name array
 # arrayBlocksReady2DockingResume
@@ -163,18 +160,17 @@ function resumeDocking(){
 	count=$(($count-1))
 }
 
-
 # name array
 # arrayBlocksReadyConfSearchSPLITTED
-
 #sometime, confSearch struggle to continue. Some the confSearch get stuck in calculation, thus, better split to save time
+
 function restartConfSearchSPLIT(){
 	currBlock=`pwd`
 	cd confS
 #remove old data
 	case $cluster in
 		1|2|4) rm -r run.log csearch.mdb;;
-        	3) rm -r slurm* csearch.mdb;
+        3) rm -r slurm* csearch.mdb;;
 	esac
 	rows=$(wc -l ../block.smi | cut -d ' ' -f 1)
 	sizeChunk=$(($rows/${nChunks[$idx]}))
@@ -203,11 +199,11 @@ function restartConfSearchSPLIT(){
 	do
 		cd $ch
 		moebatch -exec "db_Open['csearch_input.mdb','create']"
-	        moebatch -exec "db_ImportASCII [ascii_file:'chunk.smi',db_file:'csearch_input.mdb',names:['mol','ZINCID'],types:['molecule','char'],titles:0]"
+	    moebatch -exec "db_ImportASCII [ascii_file:'chunk.smi',db_file:'csearch_input.mdb',names:['mol','ZINCID'],types:['molecule','char'],titles:0]"
 		case $cluster in
-        	        1|2|4) cp ../../run.sh . ; sh run.sh -qsys slurm -qargs "--ntasks=10 --cpus-per-task=2 --mem=3G --nodes=1 --account=def-jtus --time=$timeConfS_SPLIT --job-name=confSearchRestartedSPLIT" -submit -- -i csearch_input.mdb;;
-                	3) cp ../../exeSbatchConfS.sh .; cp ../../run.sh . ; sed -i "s/#SBATCH --time=24:00:00/#SBATCH --time=$timeConfS_SPLIT/g" exeSbatchConfS.sh; sbatch exeSbatchConfS.sh;;
-	        esac
+            1|2|4) cp ../../run.sh . ; sh run.sh -qsys slurm -qargs "--ntasks=10 --cpus-per-task=2 --mem=3G --nodes=1 --account=def-jtus --time=$timeConfS_SPLIT --job-name=confSearchRestartedSPLIT" -submit -- -i csearch_input.mdb;;
+            3) cp ../../exeSbatchConfS.sh ../../run.sh . ; sed -i "s/#SBATCH --time=24:00:00/#SBATCH --time=$timeConfS_SPLIT/g" exeSbatchConfS.sh; sbatch exeSbatchConfS.sh;;
+        esac
 		cd ..
 	done
 	cd $currBlock
@@ -219,33 +215,29 @@ function restartConfSearchSPLIT(){
 
 function restartConfSearch(){
 	cd confS
-        case $cluster in
-        	1|2|4) rm -r run.log csearch.mdb; sh run.sh -qsys slurm -qargs "--ntasks=10 --cpus-per-task=2 --mem=3G --nodes=1 --account=def-jtus --time=$timeConfS --job-name=confSearchRestarted" -submit -- -i csearch_input.mdb;;
-                3) rm -r slurm* csearch.mdb; sed -i 's/"#SBATCH --time=24:00:00"/"#SBATCH --time=$timeConfS"/g' exeSbatchConfS.sh; sbatch exeSbatchConfS.sh;;
+    case $cluster in
+        1|2|4) rm -r run.log csearch.mdb; sh run.sh -qsys slurm -qargs "--ntasks=10 --cpus-per-task=2 --mem=3G --nodes=1 --account=def-jtus --time=$timeConfS --job-name=confSearchRestarted" -submit -- -i csearch_input.mdb;;
+        3) rm -r slurm* csearch.mdb; sed -i 's/"#SBATCH --time=24:00:00"/"#SBATCH --time=$timeConfS"/g' exeSbatchConfS.sh; sbatch exeSbatchConfS.sh;;
 	esac
 	count=$(($count-1))
 }
 
-
-
 #function asking if restart only the confSearch
 function askRestartConfSearch(){
 	if [ -e confS/csearch_input.mdb ]
+    then
+        read -p "Restart the ConfSearch? [y|other]: " ans
+        if [ $ans = y ]
         then
-	        read -p "Restart the ConfSearch? [y|other]: " ans
-        	if [ $ans = y ]
-        	then
-                	arrayBlocksReady2ConfSearchRestart+=(block$i)
-                	echo -e "\tblock$i : confSearch restarted\n" >> $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
-                	counterJobs 1
-        	fi
-        else
-                echo -e "\tblock$i : WTF.. csearch_input.mdb doesnt exist" >> $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
-                tail -n1 $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
+            arrayBlocksReady2ConfSearchRestart+=(block$i)
+            echo -e "\tblock$i : confSearch restarted\n" >> $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
+            counterJobs 1
         fi
+    else
+        echo -e "\tblock$i : WTF.. csearch_input.mdb doesnt exist" >> $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
+        tail -n1 $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
+    fi
 }
-
-
 
 function askRestartOrSplitConfSearch(){
     read -p "select: (1) restart the confSearch | (2) restart the confSearch splitted in smaller chunks | (other) none: " ans
