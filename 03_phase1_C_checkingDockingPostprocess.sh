@@ -142,9 +142,17 @@ function postprocess (){
 # arrayBlocksReady2Docking
 function docking (){
 	cd dockG
+	if [[ -d dockG/run.log ]]
+	then
+		run.log
+	fi
+	if [[ -e dock.mdb ]]
+	then
+		dock.mdb
+	fi
 	case $cluster in
-        	1|2|4) if [[ -d dockG/run.log]]; then rm dockG/run.log; fi; sh run.sh -qsys slurm -qargs "--ntasks=10 --cpus-per-task=2 --mem=3G --nodes=1 --account=def-jtus --time=$timeDock --job-name=Docking" -submit;;
-                3) if [[ -d dockG/run.log]]; then rm dockG/run.log; fi; sh run.sh -qsys slurm -qargs "--ntasks=1 --cpus-per-task=10 --mem=3G --nodes=1 --account=def-jtus --time=$timeDock --job-name=Docking" -submit;;
+        	1|2|4) sh run.sh -qsys slurm -qargs "--ntasks=10 --cpus-per-task=2 --mem=3G --nodes=1 --account=def-jtus --time=$timeDock --job-name=Docking" -submit;;
+                3) sh run.sh -qsys slurm -qargs "--ntasks=1 --cpus-per-task=10 --mem=3G --nodes=1 --account=def-jtus --time=$timeDock --job-name=Docking" -submit;;
         esac
 	count=$(($count-1))
 }
