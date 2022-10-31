@@ -48,26 +48,25 @@ function checkTime (){
 }
 
 function selectSlurm (){
-        if [[ -d confS/run.log ]]
-        then
-                slurmConfS=$(echo confS/run.log/*slurm/T1.err | awk '{print $NF}')
-        elif [ -e confS/slurm* ]
-        then
-                slurmConfS=$(echo confS/slurm* | awk '{print $NF}')
-        else
-                slurmConfS=""
+    if [[ -d confS/run.log ]]
+    then
+        slurmConfS=$(echo confS/run.log/*slurm/T1.err | awk '{print $NF}')
+    elif [ -e confS/slurm* ]
+    then
+        slurmConfS=$(echo confS/slurm* | awk '{print $NF}')
+    else
+        slurmConfS=""
 	fi
 	if [[ -d dockG/run.log ]]
-        then
-                slurmDockG=$(echo dockG/run.log/*slurm/T1.err | awk '{print $NF}')
-        elif [ -e dockG/slurm* ]
-        then
-	        slurmDockG=$(echo dockG/slurm* | awk '{print $NF}')
-        else
-                slurmDockG=""
-        fi
+    then
+        slurmDockG=$(echo dockG/run.log/*slurm/T1.err | awk '{print $NF}')
+    elif [ -e dockG/slurm* ]
+    then
+        slurmDockG=$(echo dockG/slurm* | awk '{print $NF}')
+    else
+        slurmDockG=""
+    fi
 }
-
 
 #find the name of block in which the job is still running. First line is the informations column
 #specify if confSearch or Dock as input argument and type of job
@@ -447,7 +446,6 @@ do
 		if [[ ! -n $slurmConfS && ! -n $slurmDockG && ! -e confS/csearch.mdb && ! -e dockG/csearch.mdb && ! -e dockG/dock.mdb ]]
 		then
 #check if chunks exist (if previously splitted). Check if completed, Cancelled, running, pending, complete
-
 ######################## CHUNK PART #######################à
 			if [[ -d confS/chunks && ! -d dockG/chunks ]]
 			then
@@ -458,11 +456,16 @@ do
 				for ch in $allChunks
 				do
 #if some of the chunk is not complete for any possible reason.
-					if [[ ! -n $(grep "ConfSearch *.* done" $ch/run.log/*slurm/T1.err) ]]
+                    			case $cluster in
+                        			1|2|4) slurmConfS_chunck=$(echo $ch/run.log/*slurm/T1.err | awk '{print $NF}');;
+                        			3)  slurmConfS_chunck=$(echo $ch/slurm* | awk '{print $NF}');;
+                    			esac
+
+					if [[ ! -n $(grep "ConfSearch *.* done" $slurmConfS_chunck) ]]
 					then
 						complete=false
 						echo -e "\n##########################################################################\n"
-						tail -n15 $ch/run.log/*slurm/T1.err
+						tail -n15 $slurmConfS_chunck
 						echo -e "\n##########################################################################\n"
 						echo -e "\t\tblock$i - $ch : ERROR14 : confSearch SPLITTING not complete" >> $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
 						tail -n1 $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
