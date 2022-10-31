@@ -546,7 +546,8 @@ do
                         				1|2) tar -zcf data.tar.gz missing* block* confS dockG --remove-files ;;
                         				3|4) tar -cf data.tar missing* block* confS dockG --remove-files ;;
                 				esac
-                				echo -e "\t\tblock$i : postProcess SPLITTING completed"
+                				echo -e "\t\tblock$i : postProcess SPLITTING completed" >> $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
+						tail -n1 $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
         				else
                 				echo -e "\t\tblock$i : ERROR17 postprocess SPLITTING" >> $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
 						tail -n1 $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
