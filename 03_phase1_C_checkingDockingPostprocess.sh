@@ -658,7 +658,7 @@ do
                 then
                     echo "block$i : Docking PENDING" >> $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
 #in some cluster, MPU dont start for some reasom, thus the job fails
-                elif [[ -n $(grep "MPU initialization failed" $slurmDockG) || -n $(grep "MPU multi-processor was shut down" $slurmDockG)]]
+                elif [[ -n $(grep "MPU initialization failed" $slurmDockG) || -n $(grep "MPU multi-processor was shut down" $slurmDockG) ]]
 				then
                     echo -e "\t\tblock$i : ERROR8: docking job failed to start because of MPU initialization fail or MPU multi-processor was shut down. Restarted" >> $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
                     tail -n1 $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
