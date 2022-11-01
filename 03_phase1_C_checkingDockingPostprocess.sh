@@ -747,8 +747,8 @@ do
 		then
 			echo "block$i : block_res.zincid > block_old.zincid MAGGIORE ANOMALY" >> $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
 		elif [[ $res -le $(($old/10*9)) ]]
-                then
-                        echo "block$i : block_res.zincid < 9/10 block_old.zincid MINORE ANOMALY" >> $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
+        then
+            echo "block$i : block_res.zincid < 9/10 block_old.zincid MINORE ANOMALY" >> $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
 		else
 #EVERYTHING WORKED WELL......
 			totalres=$(($totalres+$res))
@@ -776,113 +776,113 @@ cd $pathBlocks
 # POSTPROCESS
 if [[ -n ${arrayBlocksReady2postprocess[@]} ]]
 then
-        echo -e "blocks X postprocessing:\n\t ${arrayBlocksReady2postprocess[@]}"
-        read -p "start the postprocess? [y|other]: " ans
-        if [[ $ans == y ]]
-        then
-		echo ""
-                count=1
-                for b in ${arrayBlocksReady2postprocess[@]}
-                do
-                        cd $b
-                        postprocess &
-                        if [[ $(($count%$t_cpu)) -eq 0 ]]
-                        then
-                                wait
-                        fi
-                        count=$(($count+1))
-                        cd $pathBlocks
-                done
+    echo -e "blocks X postprocessing:\n\t ${arrayBlocksReady2postprocess[@]}"
+    read -p "start the postprocess? [y|other]: " ans
+    if [[ $ans == y ]]
+    then
+        echo ""
+        count=1
+        for b in ${arrayBlocksReady2postprocess[@]}
+        do
+            cd $b
+            postprocess &
+            if [[ $(($count%$t_cpu)) -eq 0 ]]
+            then
                 wait
-        fi
+            fi
+            count=$(($count+1))
+            cd $pathBlocks
+        done
+        wait
+    fi
 fi
 
 #CONF SEARCH - RESTART
 if [[ -n ${arrayBlocksReady2ConfSearchRestart[@]} ]]
 then
-	echo -e "\nblocks X confSearch:\n\t${arrayBlocksReady2ConfSearchRestart[@]}"
-	read -p "start the conf search? [y|other]: " ans
-	if [[ $ans == y ]]
-	then
-		echo ""
-		count=1
-		for b in ${arrayBlocksReady2ConfSearchRestart[@]}
-		do
-			cd $b
-        		restartConfSearch &
-        		if [[ $(($count%$t_cpu)) -eq 0 ]]
-        		then
-                		wait
-        		fi
-        		count=$(($count+1))
-			cd $pathBlocks
-		done
-		wait
-	fi
+    echo -e "\nblocks X confSearch:\n\t${arrayBlocksReady2ConfSearchRestart[@]}"
+    read -p "start the conf search? [y|other]: " ans
+    if [[ $ans == y ]]
+    then
+        echo ""
+        count=1
+        for b in ${arrayBlocksReady2ConfSearchRestart[@]}
+        do
+            cd $b
+            restartConfSearch &
+            if [[ $(($count%$t_cpu)) -eq 0 ]]
+            then
+                wait
+            fi
+            count=$(($count+1))
+            cd $pathBlocks
+        done
+        wait
+    fi
 fi
 
 # CONF SEARCH - SPLITTING. No parallelization because there is manual preparation
 if [[ -n ${arrayBlocksReadyConfSearchSPLITTED[@]} ]]
 then
-	echo -e "\nblocks X confSearch SPLIT:\n\t${arrayBlocksReadyConfSearchSPLITTED[@]}"
-        read -p "start the conf search - SPLIT? [y|other]; " ans
-        if [[ $ans == y ]]
-	then
-		echo "array nChunks: ${nChunks[@]}"
-		for b in ${arrayBlocksReadyConfSearchSPLITTED[@]}
-        	do
-                	cd $b
-			restartConfSearchSPLIT
-			cd $pathBlocks
-			idx=$(($idx+1))
-        	done
-	fi
+    echo -e "\nblocks X confSearch SPLIT:\n\t${arrayBlocksReadyConfSearchSPLITTED[@]}"
+    read -p "start the conf search - SPLIT? [y|other]; " ans
+    if [[ $ans == y ]]
+    then
+        echo "array nChunks: ${nChunks[@]}"
+        for b in ${arrayBlocksReadyConfSearchSPLITTED[@]}
+        do
+            cd $b
+            restartConfSearchSPLIT
+            cd $pathBlocks
+            idx=$(($idx+1))
+        done
+    fi
 fi
 
 # DOCKING - START/RESTART
 if [[ -n ${arrayBlocksReady2Docking[@]} ]]
 then
-	echo -e "\nblocks X docking:\n\t${arrayBlocksReady2Docking[@]}"
-        read -p "start the docking? [y|other]: " ans
-        if [[ $ans == y ]]
+    echo -e "\nblocks X docking:\n\t${arrayBlocksReady2Docking[@]}"
+    read -p "start the docking? [y|other]: " ans
+    if [[ $ans == y ]]
+    then
+    count=1
+    for b in ${arrayBlocksReady2Docking[@]}
+    do
+        cd $b
+        docking &
+        if [[ $(($count%$t_cpu)) -eq 0 ]]
         then
-		count=1
-		for b in ${arrayBlocksReady2Docking[@]}
-		do
-			cd $b
-			docking &
-			if [[ $(($count%$t_cpu)) -eq 0 ]]
-			then
-                		wait
-        		fi
-        		count=$(($count+1))
-			cd $pathBlocks
-		done
-		wait
-	fi
+            wait
+        fi
+        count=$(($count+1))
+        cd $pathBlocks
+    done
+    wait
+    fi
 fi
 
 # DOCKING - RESUME
 if [[ -n ${arrayBlocksReady2DockingResume[@]} ]]
 then
-	echo -e "\nblocks X docking - resume:\n\t${arrayBlocksReady2DockingResume[@]}"
-        read -p "start the resume of docking? [y|other]: " ans
-        if [[ $ans == y ]]
-        then
-		count=1
-		for b in ${arrayBlocksReady2DockingResume[@]}
-		do
-        		cd $b
-        		resumeDocking &
-        		if [[ $(($count%$t_cpu)) -eq 0 ]]
-        		then
-                		wait
-        		fi
-        		count=$(($count+1))
-			cd $pathBlocks
-		done
-		wait
-	fi
+    echo -e "\nblocks X docking - resume:\n\t${arrayBlocksReady2DockingResume[@]}"
+    read -p "start the resume of docking? [y|other]: " ans
+    if [[ $ans == y ]]
+    then
+        count=1
+        for b in ${arrayBlocksReady2DockingResume[@]}
+        do
+            cd $b
+            resumeDocking &
+            if [[ $(($count%$t_cpu)) -eq 0 ]]
+            then
+                wait
+            fi
+            count=$(($count+1))
+            cd $pathBlocks
+        done
+        wait
+    fi
 fi
 
 echo -e "\n\t\tFINISHED\n"
