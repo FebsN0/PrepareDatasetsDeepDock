@@ -1,12 +1,5 @@
 #!/bin/bash
 
-# name project: ie name of directory where save anything
-read -p 'nameDirectoryOfProject: ' protein
-if [ ! -d $protein ]
-then
-        echo "the $protein directory doesn't exist! "
-        exit 1
-fi
 #current iteration
 read -p "current iteration: " currIt
 if [ ! -d $protein/iteration_$currIt ]
@@ -35,7 +28,9 @@ echo ""
 read -p 'how many cpus use to parallelize? ' t_cpu
 
 
-file_path=$(pwd)
+file_path=`sed -n '1p' logs.txt`
+protein=`sed -n '2p' logs.txt`    # name of project folder
+
 #the python script crash with more than 512 blocks from whuch extract the data.
 cd $protein/iteration_$currIt//docking/site_$siteSel/${sets[$setSel]}
 if [[ -n $(ls) ]]
@@ -98,4 +93,22 @@ else
 fi
 
 cd $file_path
+
+
+
+#activate env of DeepDock
+source ~/envDeepDock/bin/activate
+#EXTRACTION LABEL
 python $DEEPDOCKNA/phase_2-3/Extract_labels.py -if False -n_it $currIt -protein $protein -file_path $file_path -t_pos $t_cpu -score S -zincid ZINCID -site $siteSel -set ${sets[$setSel]} -merge $merge
+
+
+#if first iteration, then the dir iwill be the morgan dir
+
+read "training, test and validation sets ready? [true|false]" ans
+if $ans
+then
+	case $currIt in
+		1) python $DEEPDOCKNA/phase_2-3/simple_job_models.py -n_it $currIt -mdd morganFP_original -time 10:00:00 -file_path $filepath/$protein -nhp 24 -titr 11  -pfm 0.01 -plm 0.0001;;
+		*) ;;
+	esac
+fi
