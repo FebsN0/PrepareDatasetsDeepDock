@@ -542,7 +542,7 @@ do
                 if $complete
                 then
                     b=block$i
-                    postprocess NORM
+                    postprocess SPLIT
                 fi
             fi
 ##################### END CHUNCK PART
@@ -745,8 +745,6 @@ do
 	elif [[ -e block$i/data.tar.gz || -e block$i/data.tar ]]
 	then
         	cd block$i
-        	totalold=$(($totalold+$old))
-
         #START CANCEL PART
 #PARTE DA CANCELLARE DOPO. POICHE CHECKING VIENE FATTO NELLA FNZIONE postprocessing
 		if [ ! -e result.log ]
@@ -779,6 +777,7 @@ do
             	echo "block$i : block_res.zincid < 98/100 block_old.zincid MINORE ANOMALY" >> $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
 		else
 #EVERYTHING WORKED WELL......
+            totalold=$(($totalold+$old))
 			totalres=$(($totalres+$res))
 			if [[ ! -e dock_result.sdf ]]
 			then
