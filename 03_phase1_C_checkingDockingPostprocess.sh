@@ -299,7 +299,8 @@ countJobs=0
 totalold=0
 missing=0
 totalres=0
-nonCompleted=0
+completed=0
+nBlockProcessed=0
 indexBlockSplit=0
 idx=0
 
@@ -443,52 +444,52 @@ echo -e "\n\t\tSCRIPT STARTED\n\n"
 pathBlocks=`pwd`
 for i in $seqN
 do
+	nBlockProcessed=$(($nBlockProcessed))
 #check if the block exists
-    if [ ! -e block$i ]
-    then
-        echo -e "\tblock$i: ERROR1 : NOT PRESENT" >> $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
-        tail -n1 $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
+	if [ ! -e block$i ]
+    	then
+        	echo -e "\tblock$i: ERROR1 : NOT PRESENT" >> $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
+        	tail -n1 $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
 #if the block is not compressed (ie not complete), check what's the reason
-    elif [[ ! -e block$i/data.tar.gz && ! -e block$i/data.tar ]]
-    then
-        echo -e "block$i checking started"
-        cd block$i
-        base=`pwd`
-        totalold=$(($totalold+$(wc -l block.smi | cut -d ' ' -f 1)))
-        nonCompleted=$(($nonCompleted+1))
+    	elif [[ ! -e block$i/data.tar.gz && ! -e block$i/data.tar ]]
+    	then
+        	echo -e "block$i checking started"
+        	cd block$i
+        	base=`pwd`
+        	totalold=$(($totalold+$(wc -l block.smi | cut -d ' ' -f 1)))
 #exist directory of new slurm
-        selectSlurm
+		selectSlurm
 #check if the block$i is not executed
-        if [[ ! -n $slurmConfS && ! -n $slurmDockG && ! -e confS/csearch.mdb && ! -e dockG/csearch.mdb && ! -e dockG/dock.mdb ]]
-        then
+        	if [[ ! -n $slurmConfS && ! -n $slurmDockG && ! -e confS/csearch.mdb && ! -e dockG/csearch.mdb && ! -e dockG/dock.mdb ]]
+        	then
 #check if chunks exist (if previously splitted). Check if completed, Cancelled, running, pending, complete
 
 ######################## CHUNK PART #######################à
 #check if COnfSearch is done
-            if [[ -d confS/chunks && ! -d dockG/chunks ]]
-            then
-                complete=true
-                cd confS/chunks
-                allChunks=$(ls)
-                for ch in $allChunks
-                do
+            		if [[ -d confS/chunks && ! -d dockG/chunks ]]
+            		then
+                		complete=true
+                		cd confS/chunks
+                		allChunks=$(ls)
+                		for ch in $allChunks
+                		do
 #if some of the chunk is not complete for any possible reason.
-                    case $cluster in
-                        1|2|4) slurmConfS_chunck=$(echo $ch/run.log/*slurm/T1.err | awk '{print $NF}');;
-                        3)  slurmConfS_chunck=$(echo $ch/slurm* | awk '{print $NF}');;
-                    esac
-                    if [[ ! -n $(grep "ConfSearch *.* done" $slurmConfS_chunck) ]]
-                    then
-                        complete=false
-                        echo -e "\n##########################################################################\n"
-                        tail -n15 $slurmConfS_chunck
-                        echo -e "\n##########################################################################\n"
-                        echo -e "\t\tblock$i - $ch : ERROR16 : confSearch SPLITTING not complete" >> $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
-                        tail -n1 $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
-                    else
+                    			case $cluster in
+                        			1|2|4) slurmConfS_chunck=$(echo $ch/run.log/*slurm/T1.err | awk '{print $NF}');;
+                        			3) slurmConfS_chunck=$(echo $ch/slurm* | awk '{print $NF}');;
+                    			esac
+                    			if [[ ! -n $(grep "ConfSearch *.* done" $slurmConfS_chunck) ]]
+                    			then
+                        			complete=false
+                        			echo -e "\n##########################################################################\n"
+                        			tail -n15 $slurmConfS_chunck
+                        			echo -e "\n##########################################################################\n"
+                        			echo -e "\t\tblock$i - $ch : ERROR16 : confSearch SPLITTING not complete" >> $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
+                        			tail -n1 $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
+                    			else
 						echo ""
 						echo -e "\t\tblock$i - $ch : confSearch SPLITTING complete" >> $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
-                        tail -n1 $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
+                        			tail -n1 $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
 					fi
 				done
 				cd $base
@@ -504,60 +505,59 @@ do
 						mv confS/chunks/$ch/csearch.mdb dockG/chunks/$ch/.
 						cd dockG/chunks/$ch
 						case $cluster in
-                            1|2|4) sh run.sh -qsys slurm -qargs "--ntasks=10 --cpus-per-task=2 --mem=3G --nodes=1 --account=def-jtus --time=$timeDock_SPLIT --job-name=Docking_SPLIT" -submit;;
-                			3) sh run.sh -qsys slurm -qargs "--ntasks=1 --cpus-per-task=10 --mem=3G --nodes=1 --account=def-jtus --time=$timeDock_SPLIT --job-name=Docking_SPLIT" -submit;;
-                        esac
+                            				1|2|4) sh run.sh -qsys slurm -qargs "--ntasks=10 --cpus-per-task=2 --mem=3G --nodes=1 --account=def-jtus --time=$timeDock_SPLIT --job-name=Docking_SPLIT" -submit;;
+                					3) sh run.sh -qsys slurm -qargs "--ntasks=1 --cpus-per-task=10 --mem=3G --nodes=1 --account=def-jtus --time=$timeDock_SPLIT --job-name=Docking_SPLIT" -submit;;
+                        			esac
 						cd $base
 					done
 					echo ""
 					echo -e "\t\tblock$i - $ch : Docking SPLITTING started" >> $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
-                    tail -n1 $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
+                    			tail -n1 $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
 					counterJobs 4
 				fi
 #check if docking of chunks are complete
-            elif [[ -d confS/chunks && -d dockG/chunks ]]
-            then
-                complete=true
-                base=`pwd`
-                cd dockG/chunks
-                allChunks=$(ls)
-                for ch in $allChunks
-                do
+            		elif [[ -d confS/chunks && -d dockG/chunks ]]
+            		then
+                		complete=true
+                		base=`pwd`
+	        	        cd dockG/chunks
+        	        	allChunks=$(ls)
+                		for ch in $allChunks
+                		do
 #if some of the chunk is not complete for any possible reason.
-                    if [[ ! -n $(grep "Docking finished" $ch/run.log/*slurm/T1.err) ]]
-                    then
-                        complete=false
-                        echo -e "\n##########################################################################\n"
-                        tail -n50 $ch/run.log/*slurm/T1.err
-                        echo -e "\n##########################################################################\n"
-                        echo -e "\t\tblock$i - $ch : ERROR17 : Docking SPLITTING not complete" >> $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
-                        tail -n1 $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
-                    else
-                        echo ""
-                        echo -e "\t\tblock$i - $ch : Docking SPLITTING complete. PostProcess ready" >> $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
-                        tail -n1 $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
-                    fi
-                done
+                    			if [[ ! -n $(grep "Docking finished" $ch/run.log/*slurm/T1.err) ]]
+                    			then
+                        			complete=false
+                        			echo -e "\n##########################################################################\n"
+                        			tail -n50 $ch/run.log/*slurm/T1.err
+                        			echo -e "\n##########################################################################\n"
+                        			echo -e "\t\tblock$i - $ch : ERROR17 : Docking SPLITTING not complete" >> $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
+                        			tail -n1 $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
+                    			else
+                        			echo ""
+                        			echo -e "\t\tblock$i - $ch : Docking SPLITTING complete. PostProcess ready" >> $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
+                        			tail -n1 $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
+                    			fi
+                		done
 #postprocessing
-                if $complete
-                then
-                    b=block$i
-                    postprocess SPLIT
-                fi
-            fi
+                		if $complete
+                		then
+                    			b=block$i
+                    			postprocess SPLIT
+				fi
 ##################### END CHUNCK PART
 #in cedar, slurm will be generated only after starting the job. Thus, "slurmConfS" is empty
-            elif [[ $cluster -eq 3 ]]
+            		elif [[ $cluster -eq 3 ]]
 			then
 				checkJobStatusBlock_i PD confSearch
 				if $checkStatus
-                then
-                    echo "block$i : confSearch PENDING" >> $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
-                else
+                		then
+                    			echo "block$i : confSearch PENDING" >> $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
+                		else
 					echo -e "\tblock$i : ERROR2 : conformational search and docking not done" >> $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
-                    tail -n1 $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
-                    askRestartOrSplitConfSearch
-                fi
+                    			tail -n1 $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
+                    			askRestartOrSplitConfSearch
+                		fi
 			else
 #GENERAL ERROR OF NOT STARTED
 				echo -e "\tblock$i : ERROR2 : conformational search and docking not done" >> $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
@@ -603,7 +603,7 @@ do
                 echo -e "\tblock$i : ERROR5 : csearch job CANCELLED" >> $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
 				tail -n1 $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
                 askRestartOrSplitConfSearch
-                
+
 #check if confSearch is running. Sometime happens that the job is terminated without reporting any error. No absolute reason reported. Just finished.
 #the slurm log is like that the job is still running, but actually it is not true (no any job in squeue)
 			elif [[ -e confS/csearch.mdb && ! -n $(grep "ConfSearch *.* done" $slurmConfS) ]]
@@ -731,7 +731,7 @@ do
                 echo -e "\tblock$i : ERROR14 the job gets stuck for unknown reasons. " >> $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
 				tail -n1 $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
 				askRestartOrResumeDocking
-			fi
+		fi
 		else
 			echo -e "\tblock$i : ERROR15 unknown : problems with $slurmConfS and $slurmDockG" >> $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
 			tail -n1 $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
@@ -777,8 +777,9 @@ do
             	echo "block$i : block_res.zincid < 98/100 block_old.zincid MINORE ANOMALY" >> $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
 		else
 #EVERYTHING WORKED WELL......
-            totalold=$(($totalold+$old))
+			totalold=$(($totalold+$old))
 			totalres=$(($totalres+$res))
+			completed=$(($completed+1))
 			if [[ ! -e dock_result.sdf ]]
 			then
 				case $cluster in
@@ -916,5 +917,5 @@ echo -e "\n\t\tFINISHED\n"
 
 echo -e "\n\tCONCLUSION CHECKING\n" >> $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
 echo -e "Total block_old.zincid:\t\t\t$totalold\nTotal block_res.zincid:\t\t\t$totalres\n\t(NB: include only blocks with no problems)\nTotal missing:\t\t\t\t$missing" >> $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
-echo -e "Blocks not completed:\t\t\t$nonCompleted" >> $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
+echo -e "Blocks completed:\t\t\t$Completed over $nBlockProcessed blocks processed" >> $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
 
