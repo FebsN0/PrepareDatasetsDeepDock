@@ -113,62 +113,56 @@ function postprocess (){
 #OUTPUT:        dock_result.sdf
 
 #if normal processing or chuk part
-    if [ $1 = "NORM" ]
-    then
-        cd dockG
-        moebatch -exec "db_ExportSD['dock.mdb','dock_result.sdf',['mol','ZINCID','S']]"
-        cd ..
-        mv dockG/dock_result.sdf .
-    elif [ $1 = "SPLIT" ]
-    then
-        for ch in $allChunks
-	    do
-            cd $ch
+	if [[ ! -n $1 ]]
+    	then
+        	cd dockG
+        	moebatch -exec "db_ExportSD['dock.mdb','dock_result.sdf',['mol','ZINCID','S']]"
+        	cd ..
+        	mv dockG/dock_result.sdf .
+    	else
+		for ch in $allChunks
+		do
+			cd $ch
 			moebatch -exec "db_ExportSD['dock.mdb','dock_result.sdf',['mol','ZINCID','S']]"
 			cat dock_result.sdf >> $base/dock_result.sdf
 			cd ..
-        done
+        	done
 		cd $base
-    else
-        echo -e "\t\t$b : postProcess ANOMALY" >> $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
-        tail -n1 $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
-    fi
-
+    	fi
 #find the missings ZINCID by comparing the initial file.smi (unluckly during the docking some compounds will be rejected) with the new file
-    awk '$2=="<ZINCID>"{ fetch_next = 1; next} fetch_next {print $1; fetch_next=0}' dock_result.sdf > block_res.zincid
-    mis=0; old=0; res=0;
+    	awk '$2=="<ZINCID>"{ fetch_next = 1; next} fetch_next {print $1; fetch_next=0}' dock_result.sdf > block_res.zincid
+    	mis=0; old=0; res=0;
 #suppress second and third column, showing the unique ZINCID present in the first set. block_old.zincid was previously generated
-    comm -23 <(sort block_old.zincid) <(sort block_res.zincid) > missing.zincid
-    mis=$(wc -l missing.zincid | cut -d ' ' -f 1)
-    old=$(wc -l block_old.zincid | cut -d ' ' -f 1)
-    res=$(wc -l block_res.zincid | cut -d ' ' -f 1)
-    echo -e "\n\t\tCONCLUSION:\nmissing:\t$mis\ntotal:\t\t$old\nCompleted:\t$res" > result.log
+ 	comm -23 <(sort block_old.zincid) <(sort block_res.zincid) > missing.zincid
+    	mis=$(wc -l missing.zincid | cut -d ' ' -f 1)
+    	old=$(wc -l block_old.zincid | cut -d ' ' -f 1)
+    	res=$(wc -l block_res.zincid | cut -d ' ' -f 1)
+    	echo -e "\n\t\tCONCLUSION:\nmissing:\t$mis\ntotal:\t\t$old\nCompleted:\t$res" > result.log
 #check if the results are okay before compressing
-    if [[ $res -eq 0 ]]
-    then
-    	echo "$b : block_res.zincid = 0 ! ANOMALY" >> $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
-    elif [[ $res -gt $old ]]
-    then
-    	echo "$b : block_res.zincid > block_old.zincid MAGGIORE ANOMALY" >> $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
-    elif [[ $res -le $(($old/100*98)) ]]
-    then
-        echo "$b : block_res.zincid < 98/100 block_old.zincid MINORE ANOMALY" >> $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
-    else
+    	if [[ $res -eq 0 ]]
+    	then
+    		echo "$b : block_res.zincid = 0 ! ANOMALY" >> $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
+    	elif [[ $res -gt $old ]]
+    	then
+    		echo "$b : block_res.zincid > block_old.zincid MAGGIORE ANOMALY" >> $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
+    	elif [[ $res -le $(($old/100*98)) ]]
+    	then
+        	echo "$b : block_res.zincid < 98/100 block_old.zincid MINORE ANOMALY" >> $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
+    	else
 #COMPRESS EVERYTHING if everything is fine. Sometime even csearch.mdb is ok, docking is done only to a really small amount of compounds. Something wrong!
-        mv dockG/dock_result.sdf .
-        case $cluster in
-            1|2) tar -zcf data.tar.gz missing* block* confS dockG --remove-files ;;
-            3|4) tar -cf data.tar missing* block* confS dockG --remove-files ;;
-        esac
-        if [ $1 = "SPLIT" ]
-        then
-            echo -e "\t\t$b : postProcess SPLITTING completed" >> $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
-            tail -n1 $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
-        else
-            echo "$b : postProcess completed"
-        fi
-    fi
-    count=$(($count-1))
+		case $cluster in
+			1|2) tar -zcf data.tar.gz missing* block* confS dockG --remove-files ;;
+			3|4) tar -cf data.tar missing* block* confS dockG --remove-files ;;
+        	esac
+        	if [ -n $1  ]
+        	then
+            		echo -e "\t\t$b : postProcess SPLITTING completed" >> $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
+            		tail -n1 $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
+        	else
+            		echo "$b : postProcess completed"
+        	fi
+	fi
+	count=$(($count-1))
 }
 
 # name array
@@ -444,7 +438,7 @@ echo -e "\n\t\tSCRIPT STARTED\n\n"
 pathBlocks=`pwd`
 for i in $seqN
 do
-	nBlockProcessed=$(($nBlockProcessed))
+	nBlockProcessed=$(($nBlockProcessed+1))
 #check if the block exists
 	if [ ! -e block$i ]
     	then
@@ -663,11 +657,12 @@ do
 				ls confS
 				echo -e "\t\tInside dockG dir:"
 				ls dockG
-                read -p "ERROR9 - Restart the confSearch (1) or the docking (2) or none (other)? " ans
+                read -p "ERROR9 - Restart the confSearch (1) or SPLIT the confSearch (2) or the docking (3) or none (other)? " ans
                 case $ans in
-                    1) arrayBlocksReady2ConfSearchRestart+=(block$i); echo -e "\tblock$i : confSearch restarted\n" >> $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log; counterJobs 1;;
-                    2) arrayBlocksReady2Docking+=(block$i); echo -e "\tblock$i : Docking restarted\n" >> $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log; counterJobs 1;;
-					*) echo -e "\t\tblock$i : NO ACTION TAKEN \n" >> $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log;;
+                    	1) arrayBlocksReady2ConfSearchRestart+=(block$i); echo -e "\tblock$i : confSearch restarted\n" >> $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log; counterJobs 1;;
+                    	2) echo -e "\nblock$i has $(wc -l block.smi |cut -d ' ' -f 1) elements"; read -p "How many smaller chunks? " nChunks[$indexBlockSplit]; indexBlockSplit=$((indexBlockSplit+1)); arrayBlocksReadyConfSearchSPLITTED+=(block$i); echo -e "\tblock$i : confSearch SPLIT started\n" >> $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log; counterJobs ${nChunks[$(($indexBlockSplit-1))]};;
+			3) arrayBlocksReady2Docking+=(block$i); echo -e "\tblock$i : Docking restarted\n" >> $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log; counterJobs 1;;
+			*) echo -e "\t\tblock$i : NO ACTION TAKEN \n" >> $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log;;
 				esac
 			fi
 		######################### DOCKING PART ######################
@@ -721,11 +716,11 @@ do
                     tail -n1 $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
 					askRestartOrResumeDocking
                 fi
-#if docking (so confSearch too) is complete. ready to postprocess
+#if docking is complete. ready to postprocess
             elif [[ -n $(grep "Docking finished" $slurmDockG) && -e dockG/dock.mdb && ! -e result.log ]]
             then
-                echo "block$i : docking complete, ready to post-process" >> $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
-				arrayBlocksReady2postprocess+=(block$i)
+                echo "block$i : docking complete, ready to post-process"
+		arrayBlocksReady2postprocess+=(block$i)
 #sometimes dock.mdb is created even if inside run.log there is no Docking started
             else
                 echo -e "\tblock$i : ERROR14 the job gets stuck for unknown reasons. " >> $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
@@ -813,7 +808,7 @@ then
         for b in ${arrayBlocksReady2postprocess[@]}
         do
             cd $b
-            postprocess NORM &
+            postprocess &
             if [[ $(($count%$t_cpu)) -eq 0 ]]
             then
                 wait
@@ -916,6 +911,6 @@ fi
 echo -e "\n\t\tFINISHED\n"
 
 echo -e "\n\tCONCLUSION CHECKING\n" >> $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
-echo -e "Total block_old.zincid:\t\t\t$totalold\nTotal block_res.zincid:\t\t\t$totalres\n\t(NB: include only blocks with no problems)\nTotal missing:\t\t\t\t$missing" >> $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
-echo -e "Blocks completed:\t\t\t$Completed over $nBlockProcessed blocks processed" >> $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
+echo -e "Total block_old.zincid:\t\t\t\t$totalold\nTotal block_res.zincid:\t\t\t\t$totalres\t\t(NB: include only blocks with no problems)\nTotal missing:\t\t\t\t\t$missing" >> $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
+echo -e "Blocks completed over $nBlockProcessed blocks processed:\t\t\t$completed" >> $main/resultsStatus_site"$siteSel"_${sets[$setSel]}.log
 
