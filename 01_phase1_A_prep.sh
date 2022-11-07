@@ -1,32 +1,32 @@
 #!/bin/bash
 
-#SBATCH --mem=10G
-#SBATCH --account=def-jtus
-#SBATCH --cpus-per-task=8
-#SBATCH --time=02:00:00
-
 # $1: file logs.txt
-# $2: current iteration
+if [[ ! -n $1 ]]
+then
+	echo "logs.txt missing"
+	exit 1
+fi
 
 #activate virtual environment where there all installed packages
 source ~/envDeepDock/bin/activate
 
-#read -p 'current iteration? ' currIt
-#read -p 'number of CPUs (cores)? ' t_cpu
-
-t_cpu=$SLURM_CPUS_PER_TASK
-currIt=$2
+read -p 'current iteration? ' currIt
+read -p 'number of CPUs (cores)? ' t_cpu
 
 # main path where there is anything
 file_path=`sed -n '1p' $1`
 # name project: ie name of directory where save anything
 protein=`sed -n '2p' $1`
-mkdir $protein
+if [[ ! -d $protein ]]
+then
+	mkdir $protein
+fi
+
 # name dir where there is morgan FP data
 morgan_directory=`sed -n '3p' $1`
 # name dir where there is SMILE data
 smile_directory=`sed -n '4p' $1`
-# size of initial dataset (suggested 1milion for train, test, validation sets)
+# total size of initial dataset (suggested 1milion for train, test, validation sets)
 n_mol=`sed -n '5p' $1`
 
 trainSize=$(($n_mol/3))
@@ -34,12 +34,11 @@ validTestSize=$trainSize
 
 
 # current iteration
-pr_it=$(($currIt-1))
-
 if [ $currIt == 1 ]
 then
 	pred_directory=$morgan_directory
 else
+	pr_it=$(($currIt-1))
 	pred_directory=$file_path/$protein/iteration_$pr_it/morgan_1024_predictions
 fi
 
