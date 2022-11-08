@@ -169,11 +169,11 @@ function docking (){
 	cd dockG
 	if [[ -d dockG/run.log ]]
 	then
-		run.log
+		rm run.log
 	fi
 	if [[ -e dock.mdb ]]
 	then
-		dock.mdb
+		rm dock.mdb
 	fi
 	case $cluster in
         	1|2|4) sh run.sh -qsys slurm -qargs "--ntasks=10 --cpus-per-task=2 --mem=3G --nodes=1 --account=def-jtus --time=$timeDock --job-name=Docking" -submit;;
