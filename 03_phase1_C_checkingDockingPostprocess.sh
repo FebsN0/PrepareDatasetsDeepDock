@@ -8,8 +8,10 @@ function counterJobs(){
         if [[ $countJobs -ge $nRuns ]]
         then
         	echo -e "\n\nMAX PREPRARED JOBS based on nRUNS REACHED: exiting from the checking cycle\nLast Block checked:block$i\n"
-                break
-        fi
+            maxJobs=true
+        else
+            maxJobs=false
+            fi
 }
 
 function checkHourMinSec (){
@@ -293,6 +295,7 @@ completed=0
 nBlockProcessed=0
 indexBlockSplit=0
 idx=0
+maxJobs=false
 
 arrayBlocksReady2postprocess=()
 arrayBlocksReady2Docking=()
@@ -509,8 +512,9 @@ do
 					done
 					echo ""
 					echo -e "\t\tblock$i - $ch : Docking SPLITTING started" >> $pathSite/resultsStatus_site_${sets[$setSel]}.log
-                    			tail -n1 $pathSite/resultsStatus_site_${sets[$setSel]}.log
+                    tail -n1 $pathSite/resultsStatus_site_${sets[$setSel]}.log
 					counterJobs 4
+					if $maxJobs; then break; fi;
 				fi
 #check if docking of chunks are complete
             		elif [[ -d confS/chunks && -d dockG/chunks ]]
@@ -555,12 +559,14 @@ do
 					echo -e "\tblock$i : ERROR2 : conformational search and docking not done" >> $pathSite/resultsStatus_site_${sets[$setSel]}.log
                     			tail -n1 $pathSite/resultsStatus_site_${sets[$setSel]}.log
                     			askRestartOrSplitConfSearch
+                    			if $maxJobs; then break; fi;
                 		fi
 			else
 #GENERAL ERROR OF NOT STARTED
 				echo -e "\tblock$i : ERROR2 : conformational search and docking not done" >> $pathSite/resultsStatus_site_${sets[$setSel]}.log
 				tail -n1 $pathSite/resultsStatus_site_${sets[$setSel]}.log
 				askRestartOrSplitConfSearch
+				if $maxJobs; then break; fi;
 			fi
 
 		######################### CONF_SEARCH PART ######################
@@ -580,6 +586,7 @@ do
                     mv csearch_input.mdb confS/.
                     arrayBlocksReady2ConfSearchRestart+=(block$i)
                     counterJobs 1
+                    if $maxJobs; then break; fi;
                 else
                     checkJobStatusBlock_i PD confSearch
                     if $checkStatus
@@ -591,6 +598,7 @@ do
                         echo -e "\tblock$i : ERROR4 : csearch.mdb doesnt exist, the job is terminated for unknown reasons" >> $pathSite/resultsStatus_site_${sets[$setSel]}.log
                         tail -n1 $pathSite/resultsStatus_site_${sets[$setSel]}.log
                         askRestartOrSplitConfSearch
+                        if $maxJobs; then break; fi;
                     fi
 				fi
 #check if the job was cancelled. Maybe x time expired and other errors. Other errors could occurs. In case of choosing SPLITTED
@@ -601,6 +609,7 @@ do
                 echo -e "\tblock$i : ERROR5 : csearch job CANCELLED" >> $pathSite/resultsStatus_site_${sets[$setSel]}.log
 				tail -n1 $pathSite/resultsStatus_site_${sets[$setSel]}.log
                 askRestartOrSplitConfSearch
+                if $maxJobs; then break; fi;
 
 #check if confSearch is running. Sometime happens that the job is terminated without reporting any error. No absolute reason reported. Just finished.
 #the slurm log is like that the job is still running, but actually it is not true (no any job in squeue)
@@ -616,6 +625,7 @@ do
                     echo -e "\tblock$i : ERROR6: csearch.mdb exist, the job is terminated for some reasons" >> $pathSite/resultsStatus_site_${sets[$setSel]}.log
                     tail -n1 $pathSite/resultsStatus_site_${sets[$setSel]}.log
 					askRestartOrSplitConfSearch
+					if $maxJobs; then break; fi;
 				fi
 #confSearch is complete
 			elif [[ -e confS/csearch.mdb && -n $(grep "ConfSearch *.* done" $slurmConfS) ]]
@@ -630,11 +640,13 @@ do
                     echo -e "\tblock$i : ERROR7 confS returned num ligands < 98/100 of block_old.zincid ANOMALY" >> $pathSite/resultsStatus_site_${sets[$setSel]}.log
                     tail -n1 $pathSite/resultsStatus_site_${sets[$setSel]}.log
                     askRestartOrSplitConfSearch
+                    if $maxJobs; then break; fi;
                 else
 #all is good
                     mv confS/csearch.mdb dockG/.
                     arrayBlocksReady2Docking+=(block$i)
                     counterJobs 1
+                    if $maxJobs; then break; fi;
                 fi
                     #csearch.mdb already moved, but for some reasons, the docking job dir is not created. Maybe PENDING. Infact, during pending, run.log is created, but not T1.err, thus $slurmDockG is empty
 			elif [[ -e dockG/csearch.mdb && ! -e dockG/dock.mdb ]]
@@ -648,6 +660,7 @@ do
 					tail -n1 $pathSite/resultsStatus_site_${sets[$setSel]}.log
                     arrayBlocksReady2Docking+=(block$i)
                     counterJobs 1
+                    if $maxJobs; then break; fi;
 				fi
 			else
 #some unpredicted error occurs
@@ -663,9 +676,9 @@ do
 				ls dockG
                 read -p "ERROR9 - Restart the confSearch (1) or SPLIT the confSearch (2) or the docking (3) or none (other)? " ans
                 case $ans in
-                    	1) arrayBlocksReady2ConfSearchRestart+=(block$i); echo -e "\tblock$i : confSearch restarted\n" >> $pathSite/resultsStatus_site_${sets[$setSel]}.log; counterJobs 1;;
-                    	2) echo -e "\nblock$i has $(wc -l block.smi |cut -d ' ' -f 1) elements"; read -p "How many smaller chunks? " nChunks[$indexBlockSplit]; indexBlockSplit=$((indexBlockSplit+1)); arrayBlocksReadyConfSearchSPLITTED+=(block$i); echo -e "\tblock$i : confSearch SPLIT started\n" >> $pathSite/resultsStatus_site_${sets[$setSel]}.log; counterJobs ${nChunks[$(($indexBlockSplit-1))]};;
-			3) arrayBlocksReady2Docking+=(block$i); echo -e "\tblock$i : Docking restarted\n" >> $pathSite/resultsStatus_site_${sets[$setSel]}.log; counterJobs 1;;
+                    	1) arrayBlocksReady2ConfSearchRestart+=(block$i); echo -e "\tblock$i : confSearch restarted\n" >> $pathSite/resultsStatus_site_${sets[$setSel]}.log; counterJobs 1; if $maxJobs; then break; fi;;
+                    	2) echo -e "\nblock$i has $(wc -l block.smi |cut -d ' ' -f 1) elements"; read -p "How many smaller chunks? " nChunks[$indexBlockSplit]; indexBlockSplit=$((indexBlockSplit+1)); arrayBlocksReadyConfSearchSPLITTED+=(block$i); echo -e "\tblock$i : confSearch SPLIT started\n" >> $pathSite/resultsStatus_site_${sets[$setSel]}.log; counterJobs ${nChunks[$(($indexBlockSplit-1))]}; if $maxJobs; then break; fi;;
+			3) arrayBlocksReady2Docking+=(block$i); echo -e "\tblock$i : Docking restarted\n" >> $pathSite/resultsStatus_site_${sets[$setSel]}.log; counterJobs 1; if $maxJobs; then break; fi;;
 			*) echo -e "\t\tblock$i : NO ACTION TAKEN \n" >> $pathSite/resultsStatus_site_${sets[$setSel]}.log;;
 				esac
 			fi
@@ -687,6 +700,7 @@ do
                     tail -n1 $pathSite/resultsStatus_site_${sets[$setSel]}.log
 					arrayBlocksReady2Docking+=(block$i)
 					counterJobs 1
+					if $maxJobs; then break; fi;
 				else
 					echo -e "\n##########################################################################\n"
 					tail -n50 $slurmDockG
@@ -694,6 +708,7 @@ do
 					echo -e "\tblock$i : ERROR11: csearch.mdb is in dockG dir, but the docking job has not started for some reasons." >> $pathSite/resultsStatus_site_${sets[$setSel]}.log
                     tail -n1 $pathSite/resultsStatus_site_${sets[$setSel]}.log
 					askRestartOrResumeDocking
+					if $maxJobs; then break; fi
                 fi
 #dock.mdb exist, but check if docking job is cancelled, maybe because time expired
 			elif [[ -e dockG/dock.mdb && -n $(grep "CANCELLED" $slurmDockG) ]]
@@ -704,6 +719,7 @@ do
 				echo -e "\tblock$i : ERROR12: docking job CANCELLED" >> $pathSite/resultsStatus_site_${sets[$setSel]}.log
                 tail -n1 $pathSite/resultsStatus_site_${sets[$setSel]}.log
 				askRestartOrResumeDocking
+				if $maxJobs; then break; fi
 #if docking is running
 			elif [[ -e dockG/dock.mdb && ! -n $(grep "Docking finished" $slurmDockG) && -n $(grep "Docking started" $slurmDockG) ]]
 			then
@@ -719,6 +735,7 @@ do
 					echo -e "\tblock$i : ERROR13 : dock.mdb exists, but the docking job has stopped for unknown reasons and CANCELLED is not reported." >> $pathSite/resultsStatus_site_${sets[$setSel]}.log
                     tail -n1 $pathSite/resultsStatus_site_${sets[$setSel]}.log
 					askRestartOrResumeDocking
+					if $maxJobs; then break; fi
                 fi
 #if docking is complete. ready to postprocess
             elif [[ -n $(grep "Docking finished" $slurmDockG) && -e dockG/dock.mdb && ! -e result.log ]]
@@ -730,6 +747,7 @@ do
                 echo -e "\tblock$i : ERROR14 the job gets stuck for unknown reasons. " >> $pathSite/resultsStatus_site_${sets[$setSel]}.log
 				tail -n1 $pathSite/resultsStatus_site_${sets[$setSel]}.log
 				askRestartOrResumeDocking
+				if $maxJobs; then break; fi
 		fi
 		else
 			echo -e "\tblock$i : ERROR15 unknown : problems with $slurmConfS and $slurmDockG" >> $pathSite/resultsStatus_site_${sets[$setSel]}.log
