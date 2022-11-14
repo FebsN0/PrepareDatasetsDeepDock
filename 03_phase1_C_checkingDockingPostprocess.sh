@@ -143,23 +143,23 @@ function postprocess (){
     	res=$(wc -l block_res.zincid | cut -d ' ' -f 1)
     	echo -e "\n\t\tCONCLUSION:\nmissing:\t$mis\ntotal:\t\t$old\nCompleted:\t$res" > result.log
 #check if the results are okay before compressing
-    	ans=true
+	ans=true
 	if [[ $res -eq 0 ]]
     	then
     		echo "$b : block_res.zincid = 0 ! ANOMALY" >> $pathSite/resultsStatus_${sets[$setSel]}.log
-    		ans=false
+				ans=false
 	elif [[ $res -gt $old ]]
     	then
     		echo "$b : block_res.zincid > block_old.zincid MAGGIORE ANOMALY" >> $pathSite/resultsStatus_${sets[$setSel]}.log
-    		ans=false
+				ans=false
 	elif [[ $res -lt $(($old/100*98)) ]]
     	then
         	echo "$b : block_res.zincid < 98/100 block_old.zincid MINORE ANOMALY" >> $pathSite/resultsStatus_${sets[$setSel]}.log
-    		cat result.log
-		read -p "continue anyway the postprocessing? [true|false]" ans
-	fi
-	if $ans
-	then
+					cat result.log
+					read -p "continue anyway the postprocessing? [true|false]" ans
+		fi
+		if $ans
+		then
 #COMPRESS EVERYTHING if everything is fine. Sometime even csearch.mdb is ok, docking is done only to a really small amount of compounds. Something wrong!
 		case $cluster in
 			1|2) tar -zcf data.tar.gz missing* block* confS dockG --remove-files ;;
@@ -455,7 +455,7 @@ do
 #check if the block exists
 	if [ ! -e block$i ]
     	then
-        	echo -e "\tblock$i: ERROR1 : NOT PRESENT" >> $main/$pathSite/resultsStatus_${sets[$setSel]}.log
+        	echo -e "\tblock$i: ERROR1 : NOT PRESENT" >> $pathSite/resultsStatus_${sets[$setSel]}.log
         	tail -n1 $pathSite/resultsStatus_${sets[$setSel]}.log
 #if the block is not compressed (ie not complete), check what's the reason
     	elif [[ ! -e block$i/data.tar.gz && ! -e block$i/data.tar ]]
