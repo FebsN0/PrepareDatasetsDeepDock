@@ -317,6 +317,13 @@ nChunks=() #save the number of chunks for each block, its index is "indexBlockSp
 
 #select the cluster. In Graham and Narval all is fine. Cedar has problems in using more tasks (confSearch need moebatch function, docking need 1 task max).
 #Moreover tar -cf/-xf on Cedar and Beluga instead of -zcf/-zxf on Graham and Narval (unknown reasons, gz compression not working)
+
+if [[ ! -n $1 ]]
+then
+        echo "logs.txt missing"
+        exit 1
+fi
+
 echo -e "\n\t\t\tSETTINGs:\n"
 echo -e "AVAILABLE CLUSTERs:\n 1 : Graham\n 2 : Narval\n 3 : Cedar\n 4 : Beluga"
 read -p "select the cluster used currently: " cluster
@@ -325,18 +332,25 @@ case $cluster in
         *) echo "wrong number. Select only 1, 2, 3 or 4"; exit 1;;
 esac
 
+
+file_path=`sed -n '1p' $1`
 # name project: ie name of directory where save anything
-protein=`sed -n '2p' logs.txt`
-read -p "name project is $protein [0: change | other: ok]" ans
+protein=`sed -n '2p' $1`
+read -p "name project is $protein, change or not? [0: change | other/none: ok] " ans
 case $ans in
-	0) read -p 'nameDirectoryOfProject: ' protein;;
-	*) ;;
+        0) read -p 'nameDirectoryOfProject: ' protein;;
+        *) ;;
 esac
-if [ ! -d $protein ]
+if [ ! -d $protein ]; then echo "$protein directory doesn't exist!"; fi
+
+
+read -p "current iteration: " currIt
+if [ ! -d $protein/iteration_$currIt ]
 then
-        echo "the $protein directory doesn't exist! "
+        echo "Iteration $currIt dir inside $protein dir doesnt exist"
         exit 1
 fi
+
 #current iteration
 read -p "current iteration: " currIt
 if [ ! -d $protein/iteration_$currIt ]
@@ -360,10 +374,9 @@ case $setSel in
         *) echo "wrong answer. Select only 0,1 or 2"; exit 1;;
 esac
 
-main=`pwd`
-cd $protein/iteration_$currIt/docking/site_$siteSel
+cd $file_path/$protein/iteration_$currIt/docking/site_$siteSel
 pathSite=`pwd`
-rm $pathSite/resultsStatus_${sets[$setSel]}.log
+if [[ -e resultsStatus_${sets[$setSel]}.log ]]; then rm resultsStatus_${sets[$setSel]}.log; fi;
 cd ${sets[$setSel]}
 
 #parallelize some jobs, especially during the restart confSearch, starting/resuming docking jobs and postprocessing jobs

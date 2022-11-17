@@ -1,17 +1,30 @@
 #!/bin/bash
 
-filepath=`sed -n '1p' logs.txt`
-protein=`sed -n '2p' logs.txt`
-morgan_directory=`sed -n '3p' logs.txt`
+# $1: file logs.txt
+if [[ ! -n $1 ]]
+then
+        echo "logs.txt missing"
+        exit 1
+fi
+
+file_path=`sed -n '1p' $1`
+morgan_directory=`sed -n '3p' $1`
+
+# name project: ie name of directory where save anything
+protein=`sed -n '2p' $1`
+read -p "name project is $protein, change or not? [0: change | other/none: ok] " ans
+case $ans in
+        0) read -p 'nameDirectoryOfProject: ' protein;;
+        *) ;;
+esac
+if [ ! -d $file_path/$protein ]; then echo "$protein directory doesn't exist!"; fi
 
 #current iteration
 read -p "current iteration: " currIt
-if [ ! -d $protein/iteration_$currIt ]
-then
-        echo "the selected iteration directory doesnt exist"
-        exit 1
-fi
-cd $protein/iteration_$currIt
+if [ ! -d $file_path/$protein/iteration_$currIt ]; then echo "Iteration $currIt dir inside $protein dir doesnt exist"; exit 1; fi;
+
+cd $file_path/$protein/iteration_$currIt
+
 
 #select the binding site found previously
 echo -e "\nBINDING SITES AVAILABLE:\n 1 (data saved on graham)\n 2 (data saved on narval)\n 3 (data saved on cedar)\n 4 (data saved on beluga)"
@@ -105,11 +118,10 @@ fi
 cd $file_path
 
 
-
 #activate env of DeepDock
 source ~/envDeepDock/bin/activate
 #EXTRACTION LABEL
-python $DEEPDOCKNA/phase_2-3/Extract_labels.py -if False -n_it $currIt -protein $protein -file_path $filepath -t_pos $t_cpu -score S -zincid ZINCID -site $siteSel -set ${sets[$setSel]} -merge $merge
+python $DEEPDOCKNA/phase_2-3/Extract_labels.py -if False -n_it $currIt -protein $protein -file_path $file_path -t_pos $t_cpu -score S -zincid ZINCID -site $siteSel -set ${sets[$setSel]} -merge $merge
 
 
 #if first iteration, then the dir iwill be the morgan dir
@@ -117,5 +129,5 @@ python $DEEPDOCKNA/phase_2-3/Extract_labels.py -if False -n_it $currIt -protein 
 read -p "training, test and validation sets ready? [true|false] " ans
 if $ans
 then
-	python $DEEPDOCKNA/phase_2-3/simple_job_models.py -n_it $currIt -mdd $morgan_directory -time 10:00:00 -file_path $filepath/$protein -nhp 24 -titr 11  -pfm 0.01 -plm 0.0001;
+	python $DEEPDOCKNA/phase_2-3/simple_job_models.py -n_it $currIt -mdd $morgan_directory -time 10:00:00 -file_path $file_path/$protein -nhp 24 -titr 11  -pfm 0.01 -plm 0.0001;
 fi

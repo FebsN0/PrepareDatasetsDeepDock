@@ -3,7 +3,7 @@
 # $1: file logs.txt
 if [[ ! -n $1 ]]
 then
-	echo "logs.txt missing"
+	echo "logs.txt not loaded!"
 	exit 1
 fi
 
@@ -17,10 +17,23 @@ read -p 'number of CPUs (cores)? ' t_cpu
 file_path=`sed -n '1p' $1`
 # name project: ie name of directory where save anything
 protein=`sed -n '2p' $1`
-if [[ ! -d $protein ]]
+read -p "name project is $protein, change or not? [0: change | other/none: ok] " ans
+case $ans in
+        0) read -p 'nameDirectoryOfProject: ' protein;;
+        *) ;;
+esac
+
+if [ ! -d $file_path/$protein ]
 then
-	mkdir $protein
+	if [[ $currIt -eq 1 ]]
+	then
+		mkdir $file_path/$protein
+	else
+	        echo "$protein directory doesn't exist!"
+        	exit 1
+	fi
 fi
+
 
 # name dir where there is morgan FP data
 morgan_directory=`sed -n '3p' $1`
@@ -44,7 +57,7 @@ fi
 
 
 # $DEEPDOCKNA is where the DeepDock-NonAutomated directry is located. Exported in .bashrc
-
+cd $file_path
 #generate in $pred_directory (if it=1, it's morganDirectory, otherwise inside protein dir) 2 similar files: Mol_ct_file.csv and Mol_ct_file_update.csv
 python $DEEPDOCKNA/phase_1/molecular_file_count_updated.py -pt $protein -it $currIt -cdd $pred_directory -t_pos $t_cpu -t_samp $n_mol
 echo -e 'END MOLECULAR COUNT\n\n\n'

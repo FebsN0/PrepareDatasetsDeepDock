@@ -8,18 +8,17 @@
 #SBATCH --time=2:0:0
 
 # $1 : n_it
-if [[ ! -n $1 ]]
-then
-	echo -e "\n\tnumber of current iteration missing\n"
-	exit 1
-fi
+if [[ ! -n $1 ]]; then echo -e "\n\tnumber of current iteration missing\n"; exit 1; fi;
+# $2: file logs.txt
+if [[ ! -n $2 ]]; then echo "logs.txt not loaded!"; exit 1; fi;
+
 source ~/envDeepDock/bin/activate
 
-file_path=`sed -n '1p' logs.txt`
-protein=`sed -n '2p' logs.txt`    # name of project folder
+file_path=`sed -n '1p' $2`
+protein=`sed -n '2p' $2`    # name of project folder
 
-morgan_directory=`sed -n '3p' logs.txt`
-num_molec=`sed -n '6p' logs.txt`
+morgan_directory=`sed -n '3p' $2`
+num_molec=`sed -n '6p' $2`
 
 
 echo "Starting Evaluation"

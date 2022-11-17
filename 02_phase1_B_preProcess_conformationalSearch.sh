@@ -51,30 +51,40 @@ function extract_convert_confSearch(){
 
 #############----------------------------------SETTINGs --------------------------####smileDir#################
 
-sets=(train test valid)
-file_path=`pwd`
-#number of lines for each block
+# $1: file logs.txt
+if [[ ! -n $1 ]]
+then
+        echo "logs.txt missing"
+        exit 1
+fi
 
 echo -e "\n\t\t\tSETTINGs:\n"
 echo -e "AVAILABLE CLUSTERs:\n 1 : Graham\n 2 : Narval\n 3 : Cedar\n 4 : Beluga"
 read -p "select the cluster used currently: " cluster
-case $cluster in
+case $cluster in  
         1|2|3|4);;
         *) echo "wrong number. Select only 1, 2, 3 or 4"; exit 1;;
 esac
 echo ""
+
+# filepath definition
+sets=(train test valid)
+file_path=`sed -n '1p' $1`
+
 # name project: ie name of directory where save anything
-read -p 'nameDirectoryOfProject: ' protein
-if [ ! -d $protein ]
-then
-        echo "the $protein directory doesn't exist! "
-        exit 1
-fi
-#current iteration
+protein=`sed -n '2p' $1`
+read -p "name project is $protein, change or not? [0: change | other/none: ok] " ans
+case $ans in
+        0) read -p 'nameDirectoryOfProject: ' protein;;
+        *) ;;
+esac
+if [ ! -d $file_path/$protein ]; then echo "$protein directory doesn't exist!"; fi
+
+
 read -p "current iteration: " currIt
-if [ ! -d $protein/iteration_$currIt ]
+if [ ! -d $file_path/$protein/iteration_$currIt ]
 then
-        echo "the selected iteration directory doesnt exist"
+        echo "Iteration $currIt dir inside $protein dir doesnt exist"
         exit 1
 fi
 
