@@ -51,9 +51,19 @@ function checkTime (){
 
 function selectSlurm (){
 #check if the job somehow is created. NOTE: T1.err exist only when run.sh starts to run
-    if [[ -d confS/run.log/*slurm/T1.err ]]
+#thank to for cycle, it finds the last job because numerical
+    if [[ -e confS/run.log ]]
     then
-        slurmConfS=$(echo confS/run.log/*slurm/T1.err | awk '{print $NF}')
+	cd confS/run.log
+	c=0; ar=();
+	for i in $(ls)
+	do
+		cd $i
+		if [[ -e T1.err ]]; then slurmConfS=confS/run.log/$i/T1.err; fi
+		cd ..
+	done
+	cd ../..
+
     elif [ -e confS/slurm* ]
     then
         slurmConfS=$(echo confS/slurm* | awk '{print $NF}')
@@ -61,9 +71,17 @@ function selectSlurm (){
         slurmConfS=""
     fi
 
-    if [[ -d dockG/run.log/*slurm/T1.err ]]
+    if [[ -e dockG/run.log ]]
     then
-        slurmDockG=$(echo dockG/run.log/*slurm/T1.err | awk '{print $NF}')
+	cd dockG/run.log
+        c=0; ar=();
+        for i in $(ls)
+        do
+                cd $i
+                if [[ -e T1.err ]]; then slurmDockG=dockG/run.log/$i/T1.err; fi
+                cd ..
+        done
+        cd ../..
     elif [ -e dockG/slurm* ]
     then
         slurmDockG=$(echo dockG/slurm* | awk '{print $NF}')
@@ -351,13 +369,7 @@ then
         exit 1
 fi
 
-#current iteration
-read -p "current iteration: " currIt
-if [ ! -d $protein/iteration_$currIt ]
-then
-        echo "the selected iteration directory doesnt exist"
-        exit 1
-fi
+
 #select the binding site found previously
 echo -e "\nBINDING SITES AVAILABLE:\n 1 (data saved on graham)\n 2 (data saved on narval)\n 3 (data saved on cedar)\n 4 (data saved on beluga)"
 read -p 'choose the binding site? ' siteSel
