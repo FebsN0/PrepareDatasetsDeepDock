@@ -11,6 +11,8 @@ then
         echo "the selected iteration directory doesnt exist"
         exit 1
 fi
+cd $protein/iteration_$currIt
+
 #select the binding site found previously
 echo -e "\nBINDING SITES AVAILABLE:\n 1 (data saved on graham)\n 2 (data saved on narval)\n 3 (data saved on cedar)\n 4 (data saved on beluga)"
 read -p 'choose the binding site? ' siteSel
@@ -20,12 +22,19 @@ case $siteSel in
 esac
 echo -e ""
 sets=(train test valid)
-echo -e "DATASETs:\n 0 (TRAINING SET - train Dir)\n 1 (TEST SET - test Dir)\n 2 (VALIDATION SET - valid Dir)"
-read -p 'which dataset to run? ' setSel
-case $setSel in
-        0|1|2);;
-        *) echo "wrong answer. Select only 0,1 or 2"; exit 1;;
-esac
+
+if [[ $currIt -eq 1 ]]
+then
+	echo -e "DATASETs:\n 0 (TRAINING SET - train Dir)\n 1 (TEST SET - test Dir)\n 2 (VALIDATION SET - valid Dir)"
+	read -p 'which dataset to run? ' setSel
+	case $setSel in
+        	0|1|2);;
+        	*) echo "wrong answer. Select only 0,1 or 2"; exit 1;;
+	esac
+else
+	setSel=0
+	cp ../iteration_1/testing_labels.txt ../iteration_1/validation_labels.txt .
+fi
 
 #parallelize some jobs, especially during the restart confSearch, starting/resuming docking jobs and postprocessing jobs
 echo ""
@@ -33,7 +42,7 @@ read -p 'how many cpus use to parallelize? ' t_cpu
 
 
 #the python script crash with more than 512 blocks from whuch extract the data.
-cd $protein/iteration_$currIt//docking/site_$siteSel/${sets[$setSel]}
+cd docking/site_$siteSel/${sets[$setSel]}
 if [[ -n $(ls) ]]
 then
         lastBlockProc=$(ls | sort -n -t 'k' -k 2 | tail -n 1)

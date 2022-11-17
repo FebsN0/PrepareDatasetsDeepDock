@@ -46,6 +46,7 @@ function extract_convert_confSearch(){
 		1|2|4) sh run.sh -qsys slurm -qargs "--ntasks=10 --cpus-per-task=2 --mem-per-cpu=2G --nodes=1 --account=def-jtus --time=$timeConfS --job-name=confSearch" -submit -- -i csearch_input.mdb
 	esac
 	count=$(($count-1))
+	echo "block$j : preparation completed"
 }
 
 #############----------------------------------SETTINGs --------------------------####smileDir#################

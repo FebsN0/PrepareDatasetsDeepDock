@@ -50,7 +50,8 @@ function checkTime (){
 }
 
 function selectSlurm (){
-    if [[ -d confS/run.log ]]
+#check if the job somehow is created. NOTE: T1.err exist only when run.sh starts to run
+    if [[ -d confS/run.log/*slurm/T1.err ]]
     then
         slurmConfS=$(echo confS/run.log/*slurm/T1.err | awk '{print $NF}')
     elif [ -e confS/slurm* ]
@@ -58,8 +59,9 @@ function selectSlurm (){
         slurmConfS=$(echo confS/slurm* | awk '{print $NF}')
     else
         slurmConfS=""
-	fi
-	if [[ -d dockG/run.log ]]
+    fi
+
+    if [[ -d dockG/run.log/*slurm/T1.err ]]
     then
         slurmDockG=$(echo dockG/run.log/*slurm/T1.err | awk '{print $NF}')
     elif [ -e dockG/slurm* ]
@@ -570,10 +572,11 @@ do
                 		fi
 			else
 #GENERAL ERROR OF NOT STARTED
-				echo -e "\tblock$i : ERROR2 : conformational search and docking not done" >> $pathSite/resultsStatus_${sets[$setSel]}.log
+				echo -e "\tblock$i : ERROR2 : conformational search and docking not done. IE run.log or slurm doesnt exist" >> $pathSite/resultsStatus_${sets[$setSel]}.log
 				tail -n1 $pathSite/resultsStatus_${sets[$setSel]}.log
-				askRestartOrSplitConfSearch
-				if $maxJobs; then break; fi;
+				arrayBlocksReady2ConfSearchRestart+=(block$i)
+                    		counterJobs 1
+                    		if $maxJobs; then break; fi;
 			fi
 
 		######################### CONF_SEARCH PART ######################
