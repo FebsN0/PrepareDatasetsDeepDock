@@ -11,6 +11,12 @@ fi
 source ~/envDeepDock/bin/activate
 
 read -p 'current iteration? ' currIt
+if [[ -d $file_path/$protein/iterat_$currIt ]]
+then
+	echo "the iteration $currIt inside $protein already exists"
+	exit 1
+fi
+
 read -p 'number of CPUs (cores)? ' t_cpu
 
 # main path where there is anything
@@ -25,13 +31,16 @@ esac
 
 if [ ! -d $file_path/$protein ]
 then
-	if [[ $currIt -eq 1 ]]
-	then
-		mkdir $file_path/$protein
-	else
-	        echo "$protein directory doesn't exist!"
-        	exit 1
-	fi
+	echo "$protein directory doesn't exist!"
+        read -p "create a new directory and start from iteration 1 [true] or mistake [false]? " $ans
+	if $ans; then mkdir $protein; else exit 1; fi;
+fi
+
+read -p 'current iteration? ' currIt
+if [[ -d $file_path/$protein/iterat_$currIt ]]
+then
+        echo "the iteration $currIt inside $protein already exists"
+        exit 1
 fi
 
 
