@@ -56,10 +56,10 @@ function selectSlurm (){
     then
 	cd confS/run.log
 	c=0; ar=();
-	for i in $(ls)
+	for slu in $(ls)
 	do
-		cd $i
-		if [[ -e T1.err ]]; then slurmConfS=confS/run.log/$i/T1.err; fi
+		cd $slu
+		if [[ -e T1.err ]]; then slurmConfS=confS/run.log/$slu/T1.err; fi
 		cd ..
 	done
 	cd ../..
@@ -75,10 +75,10 @@ function selectSlurm (){
     then
 	cd dockG/run.log
         c=0; ar=();
-        for i in $(ls)
+        for slu in $(ls)
         do
-                cd $i
-                if [[ -e T1.err ]]; then slurmDockG=dockG/run.log/$i/T1.err; fi
+                cd $slu
+                if [[ -e T1.err ]]; then slurmDockG=dockG/run.log/$slu/T1.err; fi
                 cd ..
         done
         cd ../..
