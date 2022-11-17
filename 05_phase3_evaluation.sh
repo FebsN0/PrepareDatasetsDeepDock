@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --account=def-jtus
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=4
+#SBATCH --cpus-per-task=3
 #SBATCH --gres=gpu:1
 #SBATCH --mem=10G               # memory per node
 #SBATCH --job-name=phase_5
