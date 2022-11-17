@@ -10,13 +10,6 @@ fi
 #activate virtual environment where there all installed packages
 source ~/envDeepDock/bin/activate
 
-read -p 'current iteration? ' currIt
-if [[ -d $file_path/$protein/iterat_$currIt ]]
-then
-	echo "the iteration $currIt inside $protein already exists"
-	exit 1
-fi
-
 read -p 'number of CPUs (cores)? ' t_cpu
 
 # main path where there is anything
