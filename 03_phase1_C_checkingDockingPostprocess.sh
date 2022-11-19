@@ -52,15 +52,13 @@ function checkTime (){
 function selectSlurm (){
 #check if the job somehow is created. NOTE: T1.err exist only when run.sh starts to run
 #thank to for cycle, it finds the last job because numerical
-    if [[ -e confS/run.log ]]
+    if [[ -d confS/run.log ]]
     then
 	cd confS/run.log
 	c=0; ar=();
 	for slu in $(ls)
 	do
-		cd $slu
-		if [[ -e T1.err ]]; then slurmConfS=confS/run.log/$slu/T1.err; fi
-		cd ..
+		if [[ -e $slu/T1.err ]]; then slurmConfS=confS/run.log/$slu/T1.err; fi
 	done
 	cd ../..
 
@@ -71,15 +69,13 @@ function selectSlurm (){
         slurmConfS=""
     fi
 
-    if [[ -e dockG/run.log ]]
+    if [[ -d dockG/run.log ]]
     then
 	cd dockG/run.log
         c=0; ar=();
         for slu in $(ls)
         do
-                cd $slu
-                if [[ -e T1.err ]]; then slurmDockG=dockG/run.log/$slu/T1.err; fi
-                cd ..
+                if [[ -e $slu/T1.err ]]; then slurmDockG=dockG/run.log/$slu/T1.err; fi
         done
         cd ../..
     elif [ -e dockG/slurm* ]

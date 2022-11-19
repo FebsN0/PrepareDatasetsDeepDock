@@ -82,7 +82,6 @@ fi
 #if the operation is not done yet. check if number of blocks are over 500, if yes,create macroblocks
 if [[ $lastBlock -gt $numMacroC && ! -d dock_result_blocksChunked_${sets[$setSel]} ]]
 then
-	res=0
 	nMacroBlocks=$(($lastBlock/$numMacroC))	# number of macroBlock containing 500 blocks
 	nRestBlocks=$(($lastBlock%$numMacroC))	# number of blocks rest
 	echo -e "\nNumber of macro blocks:\t\t$nMacroBlocks\nnumber of rest blocks:\t\t$nRestBlocks"
@@ -91,6 +90,7 @@ then
 	mkdir dock_result_blocksChunked_${sets[$setSel]}
 	cd dock_result_blocksChunked_${sets[$setSel]}
 	echo -e "Starting the merge\n"
+	tot=0
 	for i in $seqMacro
 	do
 		seqTmp=$(seq $((($i-1)*$numMacroC+1)) $(($i*$numMacroC)))
@@ -99,15 +99,19 @@ then
 			cat ../${sets[$setSel]}/block$j/dock_result.sdf >> dock_result_macro$i.sdf
 		done
 		echo "macro block $i complete"
+		tot=$(($tot+$(grep MOE dock_result_macro$i.sdf | wc -l | cut -d ' ' -f 1)))
+		echo "tot counted: $tot"
 	done
 	for i in $seqRest
 	do
 		cat ../${sets[$setSel]}/block$i/dock_result.sdf >> dock_result_macro_rest.sdf
 	done
+	tot=$(($tot+$(grep MOE dock_result_macro_rest.sdf | wc -l | cut -d ' ' -f 1)))
+	echo "tot DEFINITIVE counted: $tot"
 	cd ..
 fi
 
-totalRes=0
+
 if [[ -d dock_result_blocksChunked_${sets[$setSel]} ]]
 then
 	merge=true
