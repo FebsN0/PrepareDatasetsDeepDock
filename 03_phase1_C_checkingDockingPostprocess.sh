@@ -58,7 +58,10 @@ function selectSlurm (){
 	c=0; ar=();
 	for slu in $(ls)
 	do
-		if [[ -e $slu/T1.err ]]; then slurmConfS=confS/run.log/$slu/T1.err; fi
+		if [[ -e $slu/T1.err ]]; then slurmConfS=confS/run.log/$slu/T1.err;
+	#empty file, required to check if PENDING status. Because run.log exist, .jstate hidden dir exists only during PENDING status;
+	#indeed, in case of error or completed, the .jstate will be moved as .jlast 
+		else slurmConfS=confS/run.log/$slu/.jstate/.T0_ok; fi
 	done
 	cd ../..
 
@@ -75,8 +78,9 @@ function selectSlurm (){
         c=0; ar=();
         for slu in $(ls)
         do
-                if [[ -e $slu/T1.err ]]; then slurmDockG=dockG/run.log/$slu/T1.err; fi
-        done
+                if [[ -e $slu/T1.err ]]; then slurmDockG=dockG/run.log/$slu/T1.err;
+        	else slurmDock=confS/run.log/$slu/.jstate/.T0_ok; fi
+	done
         cd ../..
     elif [ -e dockG/slurm* ]
     then
@@ -332,7 +336,7 @@ nChunks=() #save the number of chunks for each block, its index is "indexBlockSp
 #select the cluster. In Graham and Narval all is fine. Cedar has problems in using more tasks (confSearch need moebatch function, docking need 1 task max).
 #Moreover tar -cf/-xf on Cedar and Beluga instead of -zcf/-zxf on Graham and Narval (unknown reasons, gz compression not working)
 
-if [[ ! -n $1 ]]
+if [[ $1 == logs.txt ]]
 then
         echo "logs.txt missing"
         exit 1

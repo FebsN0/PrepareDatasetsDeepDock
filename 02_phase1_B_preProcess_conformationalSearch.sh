@@ -52,7 +52,7 @@ function extract_convert_confSearch(){
 #############----------------------------------SETTINGs --------------------------####smileDir#################
 
 # $1: file logs.txt
-if [[ ! -n $1 ]]
+if [[ $1 == logs.txt ]]
 then
         echo "logs.txt missing"
         exit 1
