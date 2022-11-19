@@ -1,0 +1,8 @@
+#!/bin/bash
+
+if [ $1 != logs.txt ]
+then
+        echo "logs.txt missing"
+        exit 1
+fi
+

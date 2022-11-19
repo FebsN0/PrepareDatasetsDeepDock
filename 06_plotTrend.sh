@@ -11,7 +11,7 @@
 # $2 : it_end
 if [[ ! -n $1 || ! -n $2 ]]; then echo -e "\n\tstart and/or end iteration missing\n"; exit 1; fi;
 # $3: file logs.txt
-if [[ ! -n $3 ]]; then echo "logs.txt not loaded!"; exit 1; fi;
+if [[ $3 != logs.txt ]]; then echo "logs.txt not loaded!"; exit 1; fi;
 
 source ~/envDeepDock/bin/activate
 

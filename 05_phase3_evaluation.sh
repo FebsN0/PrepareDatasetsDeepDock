@@ -10,7 +10,7 @@
 # $1 : n_it
 if [[ $1 -lt 1 && $1 -gt 11 ]]; then echo -e "\n\tnumber of current iteration missing\n"; exit 1; fi;
 # $2: file logs.txt
-if [[ $2 == logs.txt ]]; then echo "logs.txt not loaded!"; exit 1; fi;
+if [[ $2 != logs.txt ]]; then echo "logs.txt not loaded!"; exit 1; fi;
 
 source ~/envDeepDock/bin/activate
 
