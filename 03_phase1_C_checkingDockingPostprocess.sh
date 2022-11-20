@@ -336,7 +336,7 @@ nChunks=() #save the number of chunks for each block, its index is "indexBlockSp
 #select the cluster. In Graham and Narval all is fine. Cedar has problems in using more tasks (confSearch need moebatch function, docking need 1 task max).
 #Moreover tar -cf/-xf on Cedar and Beluga instead of -zcf/-zxf on Graham and Narval (unknown reasons, gz compression not working)
 
-if [ $1 != logs.txt ]
+if [[ $1 != logs.txt ]]
 then
         echo "logs.txt missing"
         exit 1
